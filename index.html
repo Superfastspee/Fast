@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Management System</title>
+
+<style>
+*{box-sizing:border-box;font-family:Segoe UI,Tahoma,sans-serif}
+body{
+  margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;
+  background:linear-gradient(135deg,#ffecd2,#fcb69f)
+}
+.container{
+  width:400px;background:#fff;padding:20px;border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2)
+}
+.title{text-align:center;font-size:1.6rem;font-weight:bold;color:#ff7a18;margin-bottom:15px}
+
+.now_serving{
+  background:#ff7a18;color:#fff;padding:15px;border-radius:14px;
+  text-align:center;margin-bottom:15px
+}
+#now_number{font-size:2.2rem;font-weight:bold}
+#now_menu{font-size:1.1rem}
+
+.section_title{font-weight:bold;margin:10px 0}
+#queue_list,#history_list{display:flex;flex-direction:column;gap:8px}
+.queue_item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px;border-radius:12px;background:#fff6f0;border-left:6px solid #ff7a18
+}
+.history{opacity:.6;border-left-color:#aaa}
+.queue_time{font-size:.8rem;color:#666}
+
+.buttons{display:flex;gap:10px;margin-top:15px}
+.btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:1rem;cursor:pointer}
+.add{background:#4caf50;color:#fff}
+.remove{background:#ff5252;color:#fff}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
+.modal_content{background:#fff;width:320px;padding:20px;border-radius:16px;text-align:center}
+.menu_grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:15px 0}
+.menu_btn{padding:12px;border:none;border-radius:12px;background:#ff7a18;color:#fff;cursor:pointer}
+.close_btn{padding:10px;border:none;border-radius:10px;width:100%}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">🍜 Queue System</div>
+
+  <div class="now_serving">
+    <div>🔔 Now Serving</div>
+    <div id="now_number">—</div>
+    <div id="now_menu">Please wait</div>
+  </div>
+
+  <div class="section_title">Current Queue</div>
+  <div id="queue_list"></div>
+
+  <div class="section_title">History</div>
+  <div id="history_list"></div>
+
+  <div class="buttons">
+    <button id="button_add" class="btn add">➕ Add Queue</button>
+    <button id="button_remove" class="btn remove">✔ Serve</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="menuModal" class="modal">
+  <div class="modal_content">
+    <h3>Select Menu</h3>
+    <div class="menu_grid">
+      <button class="menu_btn" data-menu="Pad Thai">Pad Thai</button>
+      <button class="menu_btn" data-menu="Fried Rice">Fried Rice</button>
+      <button class="menu_btn" data-menu="Noodle Soup">Noodle Soup</button>
+      <button class="menu_btn" data-menu="Chicken Rice">Chicken Rice</button>
+    </div>
+    <button class="close_btn">Cancel</button>
+  </div>
+</div>
+
+<audio id="beep" src="beep.mp3"></audio>
+
+<script>
+const btnAdd=document.getElementById('button_add');
+const btnRemove=document.getElementById('button_remove');
+const queueList=document.getElementById('queue_list');
+const historyList=document.getElementById('history_list');
+const modal=document.getElementById('menuModal');
+const closeBtn=document.querySelector('.close_btn');
+const menuBtns=document.querySelectorAll('.menu_btn');
+const nowNumber=document.getElementById('now_number');
+const nowMenu=document.getElementById('now_menu');
+const beep=document.getElementById('beep');
+beep.volume=1.0;
+
+let queue=[];
+let history=[];
+let currentQueueNumber=1;
+
+function timeNow(){return new Date().toLocaleTimeString();}
+
+function updateDisplay(){
+  queueList.innerHTML='';
+  queue.forEach(q=>{
+    const d=document.createElement('div');
+    d.className='queue_item';
+    d.innerHTML=`<div>#${q.number} ${q.menu}</div>`;
+    queueList.appendChild(d);
+  });
+  historyList.innerHTML='';
+  history.forEach(h=>{
+    const d=document.createElement('div');
+    d.className='queue_item history';
+    d.innerHTML=`<div>#${h.number} ${h.menu}</div><div class="queue_time">${h.time}</div>`;
+    historyList.appendChild(d);
+  });
+}
+
+btnAdd.onclick=()=>modal.style.display='flex';
+closeBtn.onclick=()=>modal.style.display='none';
+
+menuBtns.forEach(b=>{
+  b.onclick=()=>{
+    queue.push({number:currentQueueNumber,menu:b.dataset.menu});
+    currentQueueNumber++;
+    updateDisplay();
+    modal.style.display='none';
+  }
+});
+
+btnRemove.onclick=()=>{
+  if(queue.length===0)return;
+  const served=queue.shift();
+  beep.currentTime=0;beep.play();
+  nowNumber.textContent='#'+served.number;
+  nowMenu.textContent=served.menu;
+  history.unshift({...served,time:timeNow()});
+  updateDisplay();
+};
+</script>
+</body>
+</html>
